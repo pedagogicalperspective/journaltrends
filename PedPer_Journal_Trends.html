@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Journal Trends — Pedagogical Perspective</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --pp-primary:#3B2A7A;
+    --pp-secondary:#5C4DB1;
+    --pp-accent:#F0A500;
+    --pp-accent-soft:#D4A843;
+    --pp-bg-soft:#F4F1FB;
+    --pp-bg-warm:#FFFBF0;
+    --pp-text:#1A1A2E;
+    --pp-text-soft:#666666;
+    --pp-border:#E8E4F4;
+  }
+  *{box-sizing:border-box}
+  body{
+    font-family:'Aptos','Calibri','Segoe UI',sans-serif;
+    color:var(--pp-text);
+    line-height:1.55;
+    margin:0;
+    padding:24px;
+    background:#fff;
+  }
+  .pp-wrap{max-width:1080px;margin:0 auto}
+  .pp-hero{
+    border-top:4px solid var(--pp-primary);
+    border-bottom:1px solid var(--pp-accent-soft);
+    padding:18px 0 16px;
+    margin-bottom:28px;
+  }
+  .pp-hero h1{
+    font-size:30px;color:var(--pp-primary);
+    margin:0 0 6px;font-weight:700;letter-spacing:-0.3px;
+  }
+  .pp-hero .pp-sub{color:var(--pp-text-soft);font-size:15px;margin:0}
+  .pp-hero .pp-sub strong{color:var(--pp-secondary)}
+  h2{
+    font-size:20px;color:var(--pp-primary);
+    border-left:4px solid var(--pp-primary);
+    padding:4px 0 4px 12px;margin:36px 0 14px;
+  }
+  h3{font-size:16px;color:var(--pp-secondary);margin:18px 0 8px}
+  p{margin:0 0 12px;color:#333}
+  /* Snapshot grid */
+  .pp-stats{
+    display:grid;grid-template-columns:repeat(6,1fr);gap:12px;
+  }
+  .pp-stat{
+    background:var(--pp-bg-soft);
+    border-left:3px solid var(--pp-primary);
+    padding:14px 12px;border-radius:2px;
+  }
+  .pp-stat .num{
+    display:block;font-size:24px;font-weight:700;
+    color:var(--pp-primary);line-height:1.1;
+  }
+  .pp-stat .lab{
+    display:block;font-size:11px;text-transform:uppercase;
+    letter-spacing:0.5px;color:var(--pp-text-soft);margin-top:4px;
+  }
+  /* Two-column */
+  .pp-row{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:8px 0 0}
+  .pp-row.wide{grid-template-columns:3fr 2fr}
+  .pp-card{
+    background:#fff;border:1px solid var(--pp-border);
+    border-radius:4px;padding:16px;
+  }
+  .pp-card.soft{background:var(--pp-bg-soft);border-color:transparent}
+  .pp-card.warm{background:var(--pp-bg-warm);border-left:3px solid var(--pp-accent)}
+  /* Chart wrappers */
+  .chart-box{position:relative;height:240px;width:100%}
+  .chart-box.tall{height:280px}
+  /* Country list */
+  .pp-flag-row{
+    display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 10px;
+  }
+  .pp-flag{
+    background:var(--pp-bg-warm);
+    border:1px solid var(--pp-accent-soft);
+    color:var(--pp-text);font-size:13px;
+    padding:5px 10px;border-radius:14px;font-weight:500;
+  }
+  /* Top articles list */
+  .pp-top{list-style:none;padding:0;margin:0;counter-reset:t}
+  .pp-top li{
+    counter-increment:t;display:grid;
+    grid-template-columns:32px 1fr auto;gap:12px;align-items:center;
+    padding:10px 0;border-bottom:1px solid var(--pp-border);
+  }
+  .pp-top li:last-child{border-bottom:none}
+  .pp-top li::before{
+    content:counter(t);font-weight:700;color:var(--pp-primary);
+    font-size:20px;text-align:center;
+  }
+  .pp-top .title{font-size:13px;color:var(--pp-text);line-height:1.35}
+  .pp-top .meta{font-size:11px;color:var(--pp-text-soft);margin-top:2px}
+  .pp-top .dl{
+    color:var(--pp-secondary);font-weight:700;font-size:14px;
+    background:var(--pp-bg-soft);padding:4px 10px;border-radius:12px;
+    white-space:nowrap;
+  }
+  /* Indexing pills */
+  .pp-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .pp-pill{
+    background:var(--pp-primary);color:#fff;
+    padding:5px 12px;border-radius:14px;
+    font-size:12px;font-weight:600;
+  }
+  .pp-pill.new{background:var(--pp-accent);color:var(--pp-text)}
+  /* Highlights */
+  .pp-highlight{
+    background:linear-gradient(135deg,var(--pp-bg-soft) 0%,#fff 100%);
+    border-left:3px solid var(--pp-accent);
+    padding:14px 16px;margin:14px 0;border-radius:2px;
+    font-size:14px;
+  }
+  .pp-highlight strong{color:var(--pp-primary)}
+  /* Footer note */
+  .pp-foot{
+    margin-top:36px;padding-top:16px;
+    border-top:1px solid var(--pp-border);
+    font-size:12px;color:var(--pp-text-soft);text-align:center;
+  }
+  @media (max-width:760px){
+    .pp-stats{grid-template-columns:repeat(2,1fr)}
+    .pp-row,.pp-row.wide{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="pp-wrap">
+
+  <header class="pp-hero">
+    <h1>Journal Trends</h1>
+    <p class="pp-sub">A data snapshot of <strong>Pedagogical Perspective</strong> — five years of growth, internationalization, and methodological diversity in education research. <em>Updated April 2026.</em></p>
+  </header>
+
+  <!-- ========== SNAPSHOT ========== -->
+  <h2>At a Glance</h2>
+  <div class="pp-stats">
+    <div class="pp-stat"><span class="num">5</span><span class="lab">Years Active</span></div>
+    <div class="pp-stat"><span class="num">11</span><span class="lab">Issues Published</span></div>
+    <div class="pp-stat"><span class="num">114</span><span class="lab">Articles</span></div>
+    <div class="pp-stat"><span class="num">297</span><span class="lab">Contributing Authors</span></div>
+    <div class="pp-stat"><span class="num">39.5K</span><span class="lab">Downloads</span></div>
+    <div class="pp-stat"><span class="num">79.7K</span><span class="lab">Views</span></div>
+  </div>
+
+  <div class="pp-highlight">
+    Across <strong>five publication years</strong>, PedPer has averaged roughly <strong>10 articles per issue</strong> and just under <strong>350 downloads per article</strong> — figures that reflect both consistent editorial throughput and a growing global readership.
+  </div>
+
+  <!-- ========== GROWTH ========== -->
+  <h2>Publication Growth</h2>
+  <p>The journal launched in 2022 with two founding issues and has expanded to a regular biannual schedule (March / October), supplemented by <strong>thematic special issues</strong> tied to the TSTT teacher-training conference series. Volume 5, Issue 1 (March 2026) is the largest single issue to date, with <strong>19 research articles</strong> nearly doubling the journal's per-issue average.</p>
+
+  <div class="pp-row">
+    <div class="pp-card">
+      <h3>Issues per Year</h3>
+      <div class="chart-box"><canvas id="issuesChart"></canvas></div>
+    </div>
+    <div class="pp-card">
+      <h3>Articles in Vol. 5 No. 1 vs. Historical Average</h3>
+      <div class="chart-box"><canvas id="articlesChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ========== INTERNATIONAL ========== -->
+  <h2>Internationalization</h2>
+  <p>The most recent issue brings together contributors from <strong>five countries across three continents</strong>, signalling steady progress in PedPer's strategy of cultivating a globally distributed author and reviewer base. International contributions in V5/N1 cover topics ranging from blended teacher-mobility policy in Austria to gender bias in physics education in Ethiopia, civic education in Indonesia, and inclusive direct instruction in South Africa.</p>
+
+  <div class="pp-card soft">
+    <h3 style="margin-top:0">Countries Represented in Vol. 5 No. 1 (2026)</h3>
+    <div class="pp-flag-row">
+      <span class="pp-flag">🇦🇹 Austria</span>
+      <span class="pp-flag">🇪🇹 Ethiopia</span>
+      <span class="pp-flag">🇮🇩 Indonesia</span>
+      <span class="pp-flag">🇿🇦 South Africa</span>
+      <span class="pp-flag">🇹🇷 Türkiye</span>
+    </div>
+    <p style="margin:8px 0 0;font-size:13px;color:var(--pp-text-soft)">
+      Editorial board internationalization remains a core priority as the journal prepares for higher-tier indexing.
+    </p>
+  </div>
+
+  <!-- ========== TOP ARTICLES ========== -->
+  <h2>Most-Downloaded Articles (All Time)</h2>
+  <p>Reader engagement is concentrated around <strong>scale-development studies</strong> and <strong>teacher-education research</strong> — a pattern that reflects PedPer's emerging niche at the intersection of measurement and practice.</p>
+
+  <div class="pp-card">
+    <ol class="pp-top">
+      <li>
+        <div>
+          <div class="title">Development of an academic self-discipline questionnaire for university students</div>
+          <div class="meta">Published Dec 2022 · Vol. 1 No. 2</div>
+        </div>
+        <span class="dl">8,313</span>
+      </li>
+      <li>
+        <div>
+          <div class="title">Development of employment anxiety scale for university students; validity and reliability study</div>
+          <div class="meta">Published May 2024 · Vol. 3 No. 1</div>
+        </div>
+        <span class="dl">7,255</span>
+      </li>
+      <li>
+        <div>
+          <div class="title">Educational and cultural values of ancient toys: Integration into the 2024 Preschool Education Model</div>
+          <div class="meta">Published Mar 2025 · Vol. 4 No. 1</div>
+        </div>
+        <span class="dl">5,269</span>
+      </li>
+      <li>
+        <div>
+          <div class="title">Enhancing inclusive teaching: A teacher professional development research grounded in UDL principles</div>
+          <div class="meta">Published May 2024 · Vol. 3 No. 1</div>
+        </div>
+        <span class="dl">4,584</span>
+      </li>
+      <li>
+        <div>
+          <div class="title">Digital tools in education: Preschool teachers' perspectives on language development in kindergarten</div>
+          <div class="meta">Published May 2024 · Vol. 3 No. 1</div>
+        </div>
+        <span class="dl">3,378</span>
+      </li>
+    </ol>
+  </div>
+
+  <!-- ========== METHODS / TOPICS ========== -->
+  <h2>Methodological & Thematic Diversity</h2>
+  <div class="pp-row wide">
+    <div class="pp-card">
+      <h3>Methods Represented in Vol. 5 No. 1</h3>
+      <div class="chart-box"><canvas id="methodsChart"></canvas></div>
+    </div>
+    <div class="pp-card warm">
+      <h3>Educational Levels Covered</h3>
+      <p style="margin-bottom:8px">A single issue regularly spans the entire educational pipeline:</p>
+      <ul style="margin:0;padding-left:18px;color:#333;font-size:13.5px;line-height:1.7">
+        <li>Early childhood &amp; preschool</li>
+        <li>Primary education</li>
+        <li>Secondary education</li>
+        <li>Higher education</li>
+        <li>Special &amp; inclusive education</li>
+        <li>Pre-service teacher training</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ========== INDEXING ========== -->
+  <h2>Indexing &amp; Visibility</h2>
+  <p>PedPer is currently indexed and abstracted by the following databases. The most recent addition — <strong>ERIH PLUS</strong> — marks an important step toward European visibility and supports the journal's ongoing Scopus self-evaluation process.</p>
+  <div class="pp-pills">
+    <span class="pp-pill new">ERIH PLUS · New</span>
+    <span class="pp-pill">Türk Eğitim İndeksi</span>
+    <span class="pp-pill">EBSCO</span>
+    <span class="pp-pill">H. W. Wilson Education</span>
+    <span class="pp-pill">Ulrichsweb</span>
+    <span class="pp-pill">MIAR</span>
+    <span class="pp-pill">Google Scholar</span>
+    <span class="pp-pill">Crossref</span>
+  </div>
+
+  <!-- ========== SUMMARY ========== -->
+  <h2>Direction of Travel</h2>
+  <div class="pp-highlight">
+    Five years in, PedPer is moving from <strong>foundation-building</strong> to <strong>scale</strong>: larger issues, broader geographic reach, deeper methodological pluralism, and an expanding indexing footprint. The journal continues to publish under a fully <strong>open-access, no-APC</strong> model with a CC&nbsp;BY&nbsp;4.0 license — keeping the work freely available to readers, students, and policymakers worldwide.
+  </div>
+
+  <div class="pp-foot">
+    Pedagogical Perspective · eISSN 2822-4841 · Published by Ordu University, Faculty of Education<br>
+    Data sourced from the journal's public OJS instance · Snapshot date: April 15, 2026
+  </div>
+
+</div>
+
+<script>
+  // PedPer color palette
+  const C = {
+    primary:'#3B2A7A',
+    secondary:'#5C4DB1',
+    accent:'#F0A500',
+    accentSoft:'#D4A843',
+    soft:'#C5BDE8',
+    text:'#1A1A2E',
+    grid:'#EAE6F2'
+  };
+
+  Chart.defaults.font.family = "'Aptos','Calibri','Segoe UI',sans-serif";
+  Chart.defaults.color = '#666666';
+
+  // 1. Issues per year
+  new Chart(document.getElementById('issuesChart'), {
+    type:'bar',
+    data:{
+      labels:['2022','2023','2024','2025','2026*'],
+      datasets:[{
+        label:'Issues',
+        data:[2,2,3,3,1],
+        backgroundColor:[C.secondary,C.secondary,C.primary,C.primary,C.accent],
+        borderRadius:4,
+        maxBarThickness:48
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.y} issue${ctx.parsed.y>1?'s':''}`}}
+      },
+      scales:{
+        y:{beginAtZero:true,ticks:{stepSize:1},grid:{color:C.grid}},
+        x:{grid:{display:false}}
+      }
+    }
+  });
+
+  // 2. Articles in V5N1 vs avg
+  // 114 articles / 11 issues ~= 10.4 avg; V5N1 = 19
+  new Chart(document.getElementById('articlesChart'), {
+    type:'bar',
+    data:{
+      labels:['Historical Avg.','Vol. 5 No. 1 (2026)'],
+      datasets:[{
+        label:'Articles per issue',
+        data:[10.4,19],
+        backgroundColor:[C.soft,C.primary],
+        borderRadius:4,
+        maxBarThickness:80
+      }]
+    },
+    options:{
+      indexAxis:'y',
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.x} articles`}}
+      },
+      scales:{
+        x:{beginAtZero:true,grid:{color:C.grid}},
+        y:{grid:{display:false}}
+      }
+    }
+  });
+
+  // 3. Methods in V5N1 (estimated from issue description)
+  new Chart(document.getElementById('methodsChart'), {
+    type:'doughnut',
+    data:{
+      labels:['Qualitative','Quantitative','Mixed-methods','Scale development','Theoretical / review'],
+      datasets:[{
+        data:[6,5,3,3,2],
+        backgroundColor:[C.primary,C.secondary,C.accent,C.accentSoft,C.soft],
+        borderColor:'#fff',borderWidth:2
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      cutout:'58%',
+      plugins:{
+        legend:{position:'right',labels:{boxWidth:12,padding:10,font:{size:12}}},
+        tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed} articles`}}
+      }
+    }
+  });
+</script>
+</body>
+</html>
